@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Household builder</title>
+        <style>
+            .debug {
+                font-family: monospace;
+                border: 1px solid black;
+                padding: 10px;
+                display: none;
+            }
+            form>div{
+              margin-bottom: 5px;
+            }
+            form>div>label{
+                padding: 1px;
+            }
+            .invalid{
+                border: 1px solid red;
+            }
+            .invalid>span{
+                background-color: red;
+                color: white;
+                padding: 1px 5px;
+                margin-right:-1px;
+            }
+        </style>
+    </head>
+    <body>
+        <h1>Household builder</h1>
+        <div class="builder">
+            <ol class="household"></ol>
+            <form>
+                <div>
+                    <label>Age
+                        <input type="text" name="age">
+                    </label>
+                </div>
+                <div>
+                    <label>Relationship
+                        <select name="rel">
+                            <option value="">---</option>
+                            <option value="self">Self</option>
+                            <option value="spouse">Spouse</option>
+                            <option value="child">Child</option>
+                            <option value="parent">Parent</option>
+                            <option value="grandparent">Grandparent</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </label>
+                </div>
+                <div>
+                    <label>Smoker?
+                        <input type="checkbox" name="smoker">
+                    </label>
+                </div>
+                <div>
+                    <button class="add">add</button>
+                </div>
+                <div>
+                    <button type="submit">submit</button>
+                </div>
+            </form>
+        </div>
+        <pre class="debug"></pre>
+        <script>
+            (function(){
+            //cached DOM elements and custom methods
+                var DOM = {
+                    body: document.querySelector('body'),
+                };
+                DOM.form = DOM.body.querySelector('form');
+                DOM.age = {
+                    el: DOM.form.querySelector('input[name="age"]'),
+                    error: null,
+                    message: "Invalid Age"
+                };
+                DOM.rel = {
+                    el: DOM.form.querySelector('select[name="rel"]'),
+                    error: null,
+                    message: 'Relationship is Required'
+                };
+                DOM.smoker = DOM.form.querySelector('input[name="smoker"]');
+                DOM.add = DOM.form.querySelector('input.add');
+                DOM.submit = DOM.form.querySelector('input[type="submit"]');
+
+                //Helper methods
+                DOM.addClass = function (className) {
+                    var changeClass = this.getAttribute('class');
+                    changeClass += " " + className;
+                    this.setAttribute('class', changeClass.trim());
+                };
+
+                DOM.removeClass = function (className) {
+                    var tempAttr = this.getAttribute('class');
+                    var rgx = new RegExp('' + className + '', 'gi');
+                    var newClassName = tempAttr.replace(rgx, '').trim();
+                    if(tempAttr){
+                        this.setAttribute('class', newClassName);
+                    }
+                };
+
+                function checkValueOf(target) {
+                    if(target['name'] === 'age'){
+                        return target.value === '' || isNaN(parseInt(target.value)) || target.value < 1;
+                    }else{
+                        return target.value === '';
+                    }
+                }
+
+            //Member class instantiated on add
+                function Memeber(age, rel) {
+                    this.age = age;
+                    this.rel = rel;
+                }
+                
+                var validate = function(e) {
+                    var targetElement = DOM[this['name']];
+                    if(checkValueOf(e.target)){
+                        if (targetElement.error){
+                            targetElement.error.remove();
+                            targetElement.error = null;
+                        }
+                        targetElement.error = document.createElement('span');
+                        targetElement.error.innerHTML = targetElement.message;
+                        this.parentNode.appendChild(targetElement.error);
+                        DOM.addClass.call(this.parentNode, 'invalid');//
+                    }else {
+                        if (targetElement.error){
+                            targetElement.error.remove();
+                            targetElement.error = null;
+                            DOM.removeClass.call(this.parentNode, 'invalid')
+                        }
+                    }
+                };
+
+                //Events
+                DOM.age.el.addEventListener('blur', validate, false);
+                DOM.rel.el.addEventListener('blur', validate, false);
+                
+                
+                
+                
+                
+                
+                
+                
+                
+            })();
+        </script>
+    </body>
+</html>
