@@ -82,8 +82,11 @@
                     message: 'Relationship is Required'
                 };
                 DOM.smoker = DOM.form.querySelector('input[name="smoker"]');
-                DOM.add = DOM.form.querySelector('input.add');
-                DOM.submit = DOM.form.querySelector('input[type="submit"]');
+                DOM.buttons = {
+                    group: document.getElementsByTagName('button'),
+                    add: DOM.form.querySelector('input.add'),
+                    submit: DOM.form.querySelector('input[type="submit"]')
+                };
 
                 //Helper methods
                 DOM.addClass = function (className) {
@@ -113,6 +116,21 @@
                     }
                 };
 
+                DOM.disableButtons = function () {
+                    for(var i = 0; i<DOM.buttons.group.length; i++){
+                        DOM.buttons.group.item(i).disabled = true;
+                    }
+                };
+
+                DOM.enableButtons = function () {
+                    if(!DOM.age.error && !DOM.rel.error){
+                        for(var i = 0; i<DOM.buttons.group.length; i++){
+                            DOM.buttons.group.item(i).disabled = false;
+                        }
+                    }
+                };
+
+                //Helper Functions
                 function checkValueOf(target) {
                     if(target['name'] === 'age'){
                         return target.value === '' || !isInt(target.value) || target.value < 1;
@@ -126,7 +144,7 @@
                     return rgx.test(val);
                 }
 
-            //Member class instantiated on add
+                //Member class instantiated on add
                 function Memeber(age, rel) {
                     this.age = age;
                     this.rel = rel;
@@ -143,11 +161,13 @@
                         targetElement.error.innerHTML = targetElement.message;
                         this.parentNode.appendChild(targetElement.error);
                         DOM.addClass.call(this.parentNode, 'invalid');//
+                        DOM.disableButtons();
                     }else {
                         if (targetElement.error){
                             targetElement.error.remove();
                             targetElement.error = null;
-                            DOM.removeClass.call(this.parentNode, 'invalid')
+                            DOM.removeClass.call(this.parentNode, 'invalid');
+                            DOM.enableButtons();
                         }
                     }
                 };
