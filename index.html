@@ -88,25 +88,42 @@
                 //Helper methods
                 DOM.addClass = function (className) {
                     var changeClass = this.getAttribute('class');
-                    changeClass += " " + className;
-                    this.setAttribute('class', changeClass.trim());
+                    if(!changeClass){
+                        this.setAttribute('class', className);
+                    }else {
+                        var rgx = new RegExp('' + className + '', 'gi');
+                        if(changeClass.search(rgx)===-1){
+                            changeClass += " " + className;
+                            this.setAttribute('class', changeClass.trim());
+                        }
+                    }
                 };
 
                 DOM.removeClass = function (className) {
-                    var tempAttr = this.getAttribute('class');
+                    var changeClass = this.getAttribute('class');
                     var rgx = new RegExp('' + className + '', 'gi');
-                    var newClassName = tempAttr.replace(rgx, '').trim();
-                    if(tempAttr){
+                    var newClassName = changeClass.replace(rgx, '').trim();
+                    if(changeClass){
                         this.setAttribute('class', newClassName);
+                    }
+                    //check if class is empty
+                    changeClass = this.getAttribute('class');
+                    if(!changeClass){
+                        this.removeAttribute('class');
                     }
                 };
 
                 function checkValueOf(target) {
                     if(target['name'] === 'age'){
-                        return target.value === '' || isNaN(parseInt(target.value)) || target.value < 1;
+                        return target.value === '' || !isInt(target.value) || target.value < 1;
                     }else{
                         return target.value === '';
                     }
+                }
+                
+                function isInt(val) {
+                    var rgx = new RegExp(/^\d+$/, 'g');
+                    return rgx.test(val);
                 }
 
             //Member class instantiated on add
