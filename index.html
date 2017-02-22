@@ -74,14 +74,22 @@
                 DOM.age = {
                     el: DOM.form.querySelector('input[name="age"]'),
                     error: null,
-                    message: "Invalid Age"
+                    message: "Invalid Age",
+                    required: true,
+                    content: null
                 };
                 DOM.rel = {
                     el: DOM.form.querySelector('select[name="rel"]'),
                     error: null,
-                    message: 'Relationship is Required'
+                    message: 'Relationship is Required',
+                    required: true,
+                    content: null
                 };
-                DOM.smoker = DOM.form.querySelector('input[name="smoker"]');
+                DOM.smoker = {
+                    el: DOM.form.querySelector('input[name="smoker"]'),
+                    required: false,
+                    content: null
+                };
                 DOM.buttons = {
                     group: document.getElementsByTagName('button'),
                     add: DOM.form.querySelector('button.add'),
@@ -141,16 +149,14 @@
                     return rgx.test(val);
                 }
 
-                function hasErrors() {
-                   return DOM.age.error === null && DOM.rel.error === null;
-                }
                 function touchEl(e) {
                     DOM.addClass.call(e.currentTarget,'touched');
                 }
                 function dirtyEl(e) {
                     DOM.addClass.call(e.currentTarget,'dirty');
                 }
-                
+
+                //resets the entire form to pristine state
                 function setPristine() {
                     var touched = new RegExp(/touched/,'gi');
                     var dirty = new RegExp(/dirty/,'gi');
@@ -168,6 +174,28 @@
                     }
                 }
 
+                //checks individual elements for dirty state
+                function requiredMembers() {
+                    var elements = [];
+                    for(var prop in DOM){
+                        if(DOM[prop]['required']){
+                            elements.push(DOM[prop].el);
+                        }
+                    }
+                    return elements;
+                }
+
+                function isRequiredAndValid() {
+                    var elements = requiredMembers();
+                    var count = 0;
+                    for(var i = 0; i<elements.length; i++){
+                        if(/dirty/gi.test(elements[i].getAttribute('class'))){
+                            count++;
+                        }
+                    }
+                    return count === elements.length;
+                }
+
                 //Member class instantiated on add
                 function Memeber(age, rel) {
                     this.age = age;
@@ -183,7 +211,7 @@
                         }
                         targetElement.error = document.createElement('span');
                         targetElement.error.innerHTML = targetElement.message;
-                        this.parentNode.appendChild(targetElement.error);
+                        e.target.parentNode.appendChild(targetElement.error);
                         DOM.addClass.call(e.target.parentElement, 'invalid');//
                         DOM.disableButtons();
                     }else {
@@ -200,21 +228,41 @@
                 //textbox: age
                 DOM.age.el.addEventListener('blur', validate, false);
                 DOM.age.el.addEventListener('focus', touchEl, false);
-                DOM.age.el.addEventListener('keydown', dirtyEl, false);
+                DOM.age.el.addEventListener('keyup', function(e) {
+                    dirtyEl(e);
+                    validate(e);
+                    DOM.age.content = e.currentTarget.value;
+                }, false);
 
                 //dropdown: relationship
                 DOM.rel.el.addEventListener('change', function(e){
                     validate(e);
                     dirtyEl(e);
+                    DOM.rel.content = e.currentTarget.value;
                 },false);
                 DOM.rel.el.addEventListener('focus', touchEl, false);
                 DOM.rel.el.addEventListener('blur',validate,false);
 
+                //smoker
+                DOM.smoker.el.addEventListener('change', function (e) {
+                    DOM.smoker.content = e.currentTarget.checked;
+                });
+
 
                 DOM.buttons.add.onclick = function(e){
                     e.preventDefault();
-                    hasErrors();
+                    if(!isRequiredAndValid()){
+                        var elements = requiredMembers();
+                        elements[0].focus();
+                        elements[0].blur();
+                        elements[1].focus();
+                        elements[1].blur();
+                    }else {
+                        console.log("Age: " + DOM.age.content + "\nRelationship: " + DOM.rel.content + "\nSmoker: " + DOM.smoker.content)
+                    }
+
                 };
+
                 DOM.buttons.submit.onclick = function (e) {
                     e.preventDefault();
                     setPristine();
