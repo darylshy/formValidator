@@ -242,18 +242,33 @@
                             el.focus();
                             el.blur();
                         });
+                    },
+                    hasSelf: function () {
+                        return members.some(function (member) {
+                            return member.rel === 'self';
+                        });
+                    },
+                    disableSelf: function () {
+                        var options = DOM.form.rel.el;
+                        if(this.hasSelf()){
+                            for(var i = 0; i<options.length; i++){
+                                if(options.item(i).value === 'self'){
+                                    options.item(i).setAttribute('disabled',"");
+                                }
+                            }
+                        }
                     }
                 };
 //<<----DOM.form ends here
 
 //Member Class -->>
+                var members = [];
+                
                 function Member(age, rel, smoker) {
                     this.age = age;
                     this.rel = rel;
                     this.smoker = smoker;
                 }
-
-                var members = [];
 //<<-- Member Class ends here.
 
 //Helpers -->>
@@ -290,7 +305,6 @@
                     DOM.form.validation.validate(e);
                     DOM.form.dirtyEl(e);
                     DOM.form.rel.content = e.currentTarget.value;
-                    //disableSelf();
                 },false);
                 DOM.form.rel.el.addEventListener('focus', DOM.form.touchEl, false);
                 DOM.form.rel.el.addEventListener('blur',DOM.form.validation.validate,false);
@@ -307,6 +321,7 @@
                     }else {
                         create(DOM.form.age.content,DOM.form.rel.content,DOM.form.smoker.content);
                         console.log(members);
+                        DOM.form.validation.disableSelf();
                         DOM.form.reset();
                     }
                 };
