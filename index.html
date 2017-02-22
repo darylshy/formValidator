@@ -66,38 +66,12 @@
         <pre class="debug"></pre>
         <script>
             (function(){
-            //cached DOM elements and custom methods
+
+//cached DOM elements and custom methods-->>
                 var DOM = {
                     body: document.querySelector('body'),
                 };
-                DOM.form = {
-                    el: DOM.body.querySelector('form'),
-                    formEls: DOM.body.querySelector('form').elements
-                };
 
-                DOM.form.age = {
-                    el: DOM.form.el.querySelector('input[name="age"]'),
-                    error: null,
-                    message: "Invalid Age",
-                    content: null
-                };
-                DOM.form.rel = {
-                    el: DOM.form.el.querySelector('select[name="rel"]'),
-                    error: null,
-                    message: 'Relationship is Required',
-                    content: null
-                };
-                DOM.form.smoker = {
-                    el: DOM.form.el.querySelector('input[name="smoker"]'),
-                    content: null
-                };
-                DOM.form.buttons = {
-                    group: document.getElementsByTagName('button'),
-                    add: DOM.form.el.querySelector('button.add'),
-                    submit: DOM.form.el.querySelector('button[type="submit"]')
-                };
-                DOM.form.age.el.setAttribute('required', 'true');
-                DOM.form.rel.el.setAttribute('required', 'true');
                 //Helper methods
                 DOM.addClass = function (className) {
                     var changeClass = this.getAttribute('class');
@@ -122,21 +96,50 @@
                         this.removeAttribute('class');
                     }
                 };
+//<<--Initial DOM ends here.
 
-                DOM.disableButtons = function () {
-                    for(var i = 0; i<DOM.form.buttons.group.length; i++){
-                        DOM.form.buttons.group.item(i).disabled = true;
-                    }
+//All things DOM.form-->>
+                DOM.form = {
+                    el: DOM.body.querySelector('form'),
+                    formEls: DOM.body.querySelector('form').elements
                 };
 
-                DOM.enableButtons = function () {
-                    if(!DOM.form.age.error && !DOM.form.rel.error){
-                        for(var i = 0; i<DOM.form.buttons.group.length; i++){
-                            DOM.form.buttons.group.item(i).disabled = false;
+                DOM.form.age = {
+                    el: DOM.form.el.querySelector('input[name="age"]'),
+                    error: null,
+                    message: "Invalid Age",
+                    content: null
+                };
+                DOM.form.rel = {
+                    el: DOM.form.el.querySelector('select[name="rel"]'),
+                    error: null,
+                    message: 'Relationship is Required',
+                    content: null
+                };
+                DOM.form.smoker = {
+                    el: DOM.form.el.querySelector('input[name="smoker"]'),
+                    content: null
+                };
+                DOM.form.buttons = {
+                    group: document.getElementsByTagName('button'),
+                    add: DOM.form.el.querySelector('button.add'),
+                    submit: DOM.form.el.querySelector('button[type="submit"]'),
+                    disableButtons: function () {
+                        for (var i = 0; i < this.group.length; i++) {
+                            this.group.item(i).disabled = true;
+                        }
+                    },
+                    enableButtons: function () {
+                        if (!DOM.form.age.error && !DOM.form.rel.error) {
+                            for (var i = 0; i < this.group.length; i++) {
+                                this.group.item(i).disabled = false;
+                            }
                         }
                     }
                 };
 
+                DOM.form.age.el.setAttribute('required', 'true');
+                DOM.form.rel.el.setAttribute('required', 'true');
                 DOM.form.setPristine =  function setPristine() {
                     var touched = new RegExp(/touched/,'gi');
                     var dirty = new RegExp(/dirty/,'gi');
@@ -212,13 +215,13 @@
                             targetElement.error.innerHTML = targetElement.message;
                             e.target.parentNode.appendChild(targetElement.error);
                             DOM.addClass.call(e.target.parentElement, 'invalid');//
-                            DOM.disableButtons();
+                            DOM.form.buttons.disableButtons();
                         }else {
                             if (targetElement.error){
                                 targetElement.error.remove();
                                 targetElement.error = null;
                                 DOM.removeClass.call(e.target.parentElement, 'invalid');
-                                DOM.enableButtons();
+                                DOM.form.buttons.enableButtons();
                             }
                         }
                     },
@@ -241,8 +244,9 @@
                         });
                     }
                 };
+//<<----DOM.form ends here
 
-                //Member class instantiated on add
+//Member Class -->>
                 function Member(age, rel, smoker) {
                     this.age = age;
                     this.rel = rel;
@@ -250,7 +254,9 @@
                 }
 
                 var members = [];
+//<<-- Member Class ends here.
 
+//Helpers -->>
                 function create(age, rel, smoker) {
                     var member = new Member(age, rel, smoker);
                     members.push(member);
@@ -267,8 +273,9 @@
                 function dlete() {
 
                 }
-
-                //Events
+//<<--Helpers end here.
+                
+//Events-->>
                 //textbox: age
                 DOM.form.age.el.addEventListener('blur', DOM.form.validation.validate, false);
                 DOM.form.age.el.addEventListener('focus', DOM.form.touchEl, false);
@@ -307,11 +314,8 @@
                 DOM.form.buttons.submit.onclick = function (e) {
                     e.preventDefault();
                     DOM.form.setPristine();
-
                 };
-                
-                
-                
+//-->> Events end here.
 
                 
             })();
