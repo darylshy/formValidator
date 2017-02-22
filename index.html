@@ -70,32 +70,34 @@
                 var DOM = {
                     body: document.querySelector('body'),
                 };
-                DOM.form = DOM.body.querySelector('form');
+                DOM.form = {
+                    el: DOM.body.querySelector('form'),
+                    formEls: DOM.body.querySelector('form').elements
+                };
+
                 DOM.age = {
-                    el: DOM.form.querySelector('input[name="age"]'),
+                    el: DOM.form.el.querySelector('input[name="age"]'),
                     error: null,
                     message: "Invalid Age",
-                    required: true,
                     content: null
                 };
                 DOM.rel = {
-                    el: DOM.form.querySelector('select[name="rel"]'),
+                    el: DOM.form.el.querySelector('select[name="rel"]'),
                     error: null,
                     message: 'Relationship is Required',
-                    required: true,
                     content: null
                 };
                 DOM.smoker = {
-                    el: DOM.form.querySelector('input[name="smoker"]'),
-                    required: false,
+                    el: DOM.form.el.querySelector('input[name="smoker"]'),
                     content: null
                 };
                 DOM.buttons = {
                     group: document.getElementsByTagName('button'),
-                    add: DOM.form.querySelector('button.add'),
-                    submit: DOM.form.querySelector('button[type="submit"]')
+                    add: DOM.form.el.querySelector('button.add'),
+                    submit: DOM.form.el.querySelector('button[type="submit"]')
                 };
-
+                DOM.age.el.setAttribute('required', 'true');
+                DOM.rel.el.setAttribute('required', 'true');
                 //Helper methods
                 DOM.addClass = function (className) {
                     var changeClass = this.getAttribute('class');
@@ -135,6 +137,57 @@
                     }
                 };
 
+                DOM.form.setPristine =  function setPristine() {
+                    var touched = new RegExp(/touched/,'gi');
+                    var dirty = new RegExp(/dirty/,'gi');
+                    var formElms = this.formEls;
+                    for(var i = 0; i < formElms.length; i++){
+                        if(formElms.item(i).getAttribute('class')){
+                            if(formElms.item(i).getAttribute('class').search(touched) !== -1){
+                                DOM.removeClass.call(formElms.item(i), 'touched');
+                            }
+                            if(formElms.item(i).getAttribute('class').search(dirty) !== -1){
+                                DOM.removeClass.call(formElms.item(i), 'dirty');
+                            }
+                        }
+
+                    }
+                };
+
+                DOM.form.touchEl = function(e) {
+                    DOM.addClass.call(e.currentTarget,'touched');
+                };
+
+                DOM.form.dirtyEl = function(e){
+                    DOM.addClass.call(e.currentTarget,'dirty');
+                };
+
+                DOM.form.reset = function() {
+                    var els = this.formEls;
+                    var val;
+                    for(var i = 0; i<els.length; i++){
+                        if(val = els.item(i).value){
+                            if(val === 'on'){
+                                els.item(i).checked = false;
+                            }else{
+                                els.item(i).value = '';
+                            }
+                        }
+                    }
+                    this.setPristine();
+                };
+
+                DOM.form.requiredMembers = function() {
+                    var elements = [];
+                    var formEls = this.formEls;
+                    for(var i = 0; i<formEls.length; i++){
+                        if(formEls.item(i).required === true){
+                            elements.push(formEls.item(i));
+                        }
+                    }
+                    return elements;
+                };
+
                 //Helper Functions
                 function checkValueOf(target) {
                     if(target['name'] === 'age'){
@@ -149,44 +202,10 @@
                     return rgx.test(val);
                 }
 
-                function touchEl(e) {
-                    DOM.addClass.call(e.currentTarget,'touched');
-                }
-                function dirtyEl(e) {
-                    DOM.addClass.call(e.currentTarget,'dirty');
-                }
 
-                //resets the entire form to pristine state
-                function setPristine() {
-                    var touched = new RegExp(/touched/,'gi');
-                    var dirty = new RegExp(/dirty/,'gi');
-                    var formElms = document.getElementsByTagName('form')[0].elements;
-                    for(var i = 0; i < formElms.length; i++){
-                        if(formElms.item(i).getAttribute('class')){
-                            if(formElms.item(i).getAttribute('class').search(touched) !== -1){
-                                DOM.removeClass.call(formElms.item(i), 'touched');
-                            }
-                            if(formElms.item(i).getAttribute('class').search(dirty) !== -1){
-                                DOM.removeClass.call(formElms.item(i), 'dirty');
-                            }
-                        }
-
-                    }
-                }
-
-                //checks individual elements for dirty state
-                function requiredMembers() {
-                    var elements = [];
-                    for(var prop in DOM){
-                        if(DOM[prop]['required']){
-                            elements.push(DOM[prop].el);
-                        }
-                    }
-                    return elements;
-                }
 
                 function isRequiredAndValid() {
-                    var elements = requiredMembers();
+                    var elements = DOM.form.requiredMembers();
                     var count = 0;
                     for(var i = 0; i<elements.length; i++){
                         if(/dirty/gi.test(elements[i].getAttribute('class'))){
@@ -195,14 +214,15 @@
                     }
                     return count === elements.length;
                 }
-
-                //Member class instantiated on add
-                function Memeber(age, rel) {
-                    this.age = age;
-                    this.rel = rel;
+                function triggerValidate() {
+                    var elements = DOM.form.requiredMembers();
+                    elements.forEach(function (el) {
+                        el.focus();
+                        el.blur();
+                    });
                 }
-                
-                var validate = function(e) {
+
+                function validate(e) {
                     var targetElement = DOM[e.currentTarget['name']];
                     if(checkValueOf(e.target)){
                         if (targetElement.error){
@@ -222,14 +242,40 @@
                             DOM.enableButtons();
                         }
                     }
-                };
+                }
+
+                //Member class instantiated on add
+                function Member(age, rel, smoker) {
+                    this.age = age;
+                    this.rel = rel;
+                    this.smoker = smoker;
+                }
+
+                var members = [];
+
+                function create(age, rel, smoker) {
+                    var member = new Member(age, rel, smoker);
+                    members.push(member);
+                }
+
+                function read() {
+
+                }
+
+                function update() {
+
+                }
+
+                function dlete() {
+
+                }
 
                 //Events
                 //textbox: age
                 DOM.age.el.addEventListener('blur', validate, false);
-                DOM.age.el.addEventListener('focus', touchEl, false);
+                DOM.age.el.addEventListener('focus', DOM.form.touchEl, false);
                 DOM.age.el.addEventListener('keyup', function(e) {
-                    dirtyEl(e);
+                    DOM.form.dirtyEl(e);
                     validate(e);
                     DOM.age.content = e.currentTarget.value;
                 }, false);
@@ -237,10 +283,11 @@
                 //dropdown: relationship
                 DOM.rel.el.addEventListener('change', function(e){
                     validate(e);
-                    dirtyEl(e);
+                    DOM.form.dirtyEl(e);
                     DOM.rel.content = e.currentTarget.value;
+                    //disableSelf();
                 },false);
-                DOM.rel.el.addEventListener('focus', touchEl, false);
+                DOM.rel.el.addEventListener('focus', DOM.form.touchEl, false);
                 DOM.rel.el.addEventListener('blur',validate,false);
 
                 //smoker
@@ -248,24 +295,20 @@
                     DOM.smoker.content = e.currentTarget.checked;
                 });
 
-
                 DOM.buttons.add.onclick = function(e){
                     e.preventDefault();
                     if(!isRequiredAndValid()){
-                        var elements = requiredMembers();
-                        elements[0].focus();
-                        elements[0].blur();
-                        elements[1].focus();
-                        elements[1].blur();
+                        triggerValidate();
                     }else {
-                        console.log("Age: " + DOM.age.content + "\nRelationship: " + DOM.rel.content + "\nSmoker: " + DOM.smoker.content)
+                        create(DOM.age.content,DOM.rel.content,DOM.smoker.content);
+                        console.log(members);
+                        DOM.form.reset();
                     }
-
                 };
 
                 DOM.buttons.submit.onclick = function (e) {
                     e.preventDefault();
-                    setPristine();
+                    DOM.form.setPristine();
 
                 };
                 
