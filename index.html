@@ -118,7 +118,25 @@
                 };
                 DOM.form.smoker = {
                     el: DOM.form.el.querySelector('input[name="smoker"]'),
-                    content: null
+                    content: null,
+                    currentAge: function () {
+                        var curAge = DOM.form.age.content;
+                        if(curAge >= 18){
+                            this.el.removeAttribute('disabled');
+                        }else {
+                            this.el.checked = false;
+                        }
+
+                      return curAge;
+                    },
+                    checkSmokerAge: function () {
+                        if(this.currentAge() < 18){
+                            this.el.setAttribute('disabled', '');
+                            alert("Must be 18 or over");
+                        }else {
+                            this.el.checked = true;
+                        }
+                    }
                 };
                 DOM.form.buttons = {
                     group: document.getElementsByTagName('button'),
@@ -243,20 +261,25 @@
                             el.blur();
                         });
                     },
-                    hasSelf: function () {
+                    hasOption: function (option) {
+                        var rgx = new RegExp('' + option + '', 'gi');
                         return members.some(function (member) {
-                            return member.rel === 'self';
+                            return rgx.test(member.rel);
                         });
                     },
-                    disableSelf: function () {
+                    disableOption: function () {
                         var options = DOM.form.rel.el;
-                        if(this.hasSelf()){
-                            for(var i = 0; i<options.length; i++){
-                                if(options.item(i).value === 'self'){
-                                    options.item(i).setAttribute('disabled',"");
+                        var opts = ['self', 'spouse'];
+                        var self = this;
+                        opts.forEach(function (opt) {
+                            if(self.hasOption(opt)){
+                                for(var i = 0; i<options.length; i++){
+                                    if(options.item(i).value === opt){
+                                        options.item(i).setAttribute('disabled',"");
+                                    }
                                 }
                             }
-                        }
+                        });
                     }
                 };
 //<<----DOM.form ends here
@@ -298,6 +321,7 @@
                     DOM.form.dirtyEl(e);
                     DOM.form.validation.validate(e);
                     DOM.form.age.content = e.currentTarget.value;
+                    DOM.form.smoker.currentAge();
                 }, false);
 
                 //dropdown: relationship
@@ -321,7 +345,7 @@
                     }else {
                         create(DOM.form.age.content,DOM.form.rel.content,DOM.form.smoker.content);
                         console.log(members);
-                        DOM.form.validation.disableSelf();
+                        DOM.form.validation.disableOption();
                         DOM.form.reset();
                     }
                 };
@@ -330,6 +354,11 @@
                     e.preventDefault();
                     DOM.form.setPristine();
                 };
+
+                DOM.form.smoker.el.addEventListener('click', function (e) {
+                    //e.preventDefault();
+                    DOM.form.smoker.checkSmokerAge();
+                });
 //-->> Events end here.
 
                 
