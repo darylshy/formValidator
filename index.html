@@ -318,6 +318,8 @@
                 DOM.form.age.el.addEventListener('blur', DOM.form.validation.validate, false);
                 DOM.form.age.el.addEventListener('focus', DOM.form.touchEl, false);
                 DOM.form.age.el.addEventListener('keyup', function(e) {
+                    //no leading zeroes
+                    DOM.form.age.el.value = DOM.form.age.el.value.replace(/^0(?=\d*)/gi, '');
                     DOM.form.dirtyEl(e);
                     DOM.form.validation.validate(e);
                     DOM.form.age.content = e.currentTarget.value;
