@@ -280,14 +280,26 @@
                                 }
                             }
                         });
+                    },
+                    enableOption: function (opt) {
+                        var options = DOM.form.rel.el;
+                        for(var i = 0; i<options.length; i++){
+                            if(options.item(i).value === opt){
+                                options.item(i).removeAttribute('disabled');
+                            }
+                        }
                     }
                 };
 //<<----DOM.form ends here
                 var hr = document.createElement('hr');
                 DOM.body.appendChild(hr);
+                var container = document.createElement('div');
+                container.setAttribute('class', 'container');
+                DOM.body.appendChild(container);
                 DOM.render = function () {
                     var div = document.createElement('div');
-                    DOM.body.appendChild(div);
+                    div.setAttribute('data-member-id', '' + members.length + '');
+                    container.appendChild(div);
                     div.style.border = '1px solid black';
                     div.style.width = "15%";
                     div.style.float = "left";
@@ -326,6 +338,17 @@
                     var smoker = document.createElement('p');
                     smoker.innerHTML = "Smoker: " + members[members.length-1].smoker;
                     section.appendChild(smoker);
+                    deleteButton.addEventListener('click', function (e) {
+                        var nodeList = Array.prototype.slice.call( document.getElementsByClassName('container')[0].children );
+                        var currentContainer = e.currentTarget.parentElement.parentElement.parentElement;
+                        var relationship = members[nodeList.indexOf(currentContainer)].rel;
+                        if(relationship === 'self' || relationship === 'spouse'){
+                            DOM.form.validation.enableOption(relationship);
+                        }
+                        members.splice(nodeList.indexOf(currentContainer),1);
+                        currentContainer.remove();
+                        console.log(members);
+                    });
                 };
 
 //Member Class -->>
@@ -355,6 +378,7 @@
                 function dlete() {
 
                 }
+
 //<<--Helpers end here.
                 
 //Events-->>
@@ -395,9 +419,8 @@
                     e.preventDefault();
                     DOM.form.setPristine();
                 };
-                
+
                 DOM.form.smoker.el.addEventListener('click', function (e) {
-                    //e.preventDefault();
                     DOM.form.smoker.checkSmokerAge();
                     DOM.form.smoker.content = DOM.form.smoker.el.checked;
                 });
