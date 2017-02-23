@@ -261,33 +261,20 @@
                             el.blur();
                         });
                     },
-                    hasOption: function (option) {
-                        var rgx = new RegExp('' + option + '', 'gi');
-                        return members.some(function (member) {
-                            return rgx.test(member.rel);
-                        });
-                    },
-                    disableOption: function () {
+                    enableOptions: function (opts, enable) {
                         var options = DOM.form.rel.el;
-                        var opts = ['self', 'spouse'];
-                        var self = this;
                         opts.forEach(function (opt) {
-                            if(self.hasOption(opt)){
-                                for(var i = 0; i<options.length; i++){
-                                    if(options.item(i).value === opt){
+                            for(var i = 0; i<options.length; i++){
+                                if(options.item(i).value === opt){
+                                    if(enable){
+                                        options.item(i).removeAttribute('disabled');
+                                    }else{
                                         options.item(i).setAttribute('disabled',"");
                                     }
                                 }
                             }
                         });
-                    },
-                    enableOption: function (opt) {
-                        var options = DOM.form.rel.el;
-                        for(var i = 0; i<options.length; i++){
-                            if(options.item(i).value === opt){
-                                options.item(i).removeAttribute('disabled');
-                            }
-                        }
+
                     }
                 };
 //<<----DOM.form ends here
@@ -343,7 +330,7 @@
                         var currentContainer = e.currentTarget.parentElement.parentElement.parentElement;
                         var relationship = members[nodeList.indexOf(currentContainer)].rel;
                         if(relationship === 'self' || relationship === 'spouse'){
-                            DOM.form.validation.enableOption(relationship);
+                            DOM.form.validation.enableOptions([relationship], true);
                         }
                         members.splice(nodeList.indexOf(currentContainer),1);
                         currentContainer.remove();
@@ -392,6 +379,11 @@
                     DOM.form.validation.validate(e);
                     DOM.form.age.content = e.currentTarget.value;
                     DOM.form.smoker.currentAge();
+                    if(DOM.form.age.el.value < 18){
+                        DOM.form.validation.enableOptions(['parent', 'grandparent','spouse','self'], false);
+                    }else{
+                        DOM.form.validation.enableOptions(['parent', 'grandparent','spouse','self'], true);
+                    }
                 }, false);
 
                 //dropdown: relationship
@@ -409,7 +401,15 @@
                     }else {
                         create(DOM.form.age.content,DOM.form.rel.content,DOM.form.smoker.el.checked);
                         console.log(members);
-                        DOM.form.validation.disableOption();
+                        switch (DOM.form.rel.content){
+                            case 'self':
+                                DOM.form.validation.enableOptions([DOM.form.rel.content], false);
+                                break;
+                            case 'spouse':
+                                DOM.form.validation.enableOptions([DOM.form.rel.content], false);
+                                break;
+                        }
+
                         DOM.form.reset();
                         DOM.render();
                     }
