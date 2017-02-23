@@ -1,433 +1,473 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="utf-8">
-        <title>Household builder</title>
-        <style>
-            .debug {
-                font-family: monospace;
-                border: 1px solid black;
-                padding: 10px;
-                display: none;
-            }
-            form>div{
-              margin-bottom: 5px;
-            }
-            form>div>label{
-                padding: 1px;
-            }
-            .invalid{
-                border: 1px solid red;
-            }
-            .invalid>span{
-                background-color: red;
-                color: white;
-                padding: 1px 5px;
-                margin-right:-1px;
-            }
-        </style>
-    </head>
-    <body>
-        <h1>Household builder</h1>
-        <div class="builder">
-            <ol class="household"></ol>
-            <form>
-                <div>
-                    <label>Age
-                        <input type="text" name="age">
-                    </label>
-                </div>
-                <div>
-                    <label>Relationship
-                        <select name="rel">
-                            <option value="">---</option>
-                            <option value="self">Self</option>
-                            <option value="spouse">Spouse</option>
-                            <option value="child">Child</option>
-                            <option value="parent">Parent</option>
-                            <option value="grandparent">Grandparent</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </label>
-                </div>
-                <div>
-                    <label>Smoker?
-                        <input type="checkbox" name="smoker">
-                    </label>
-                </div>
-                <div>
-                    <button class="add">add</button>
-                </div>
-                <div>
-                    <button type="submit">submit</button>
-                </div>
-            </form>
+<head>
+    <meta charset="utf-8">
+    <title>Household builder</title>
+    <style>
+        .debug {
+            font-family: monospace;
+            border: 1px solid black;
+            padding: 10px;
+            display: none;
+        }
+
+        form > div {
+            margin-bottom: 5px;
+        }
+
+        form > div > label {
+            padding: 1px;
+        }
+
+        .invalid {
+            border: 1px solid red;
+        }
+
+        .invalid > span {
+            background-color: red;
+            color: white;
+            padding: 1px 5px;
+            margin-right: -1px;
+        }
+    </style>
+</head>
+<body>
+<h1>Household builder</h1>
+<div class="builder">
+    <ol class="household"></ol>
+    <form>
+        <div>
+            <label>Age
+                <input type="text" name="age">
+            </label>
         </div>
-        <pre class="debug"></pre>
-        <script>
-            (function(){
+        <div>
+            <label>Relationship
+                <select name="rel">
+                    <option value="">---</option>
+                    <option value="self">Self</option>
+                    <option value="spouse">Spouse</option>
+                    <option value="child">Child</option>
+                    <option value="parent">Parent</option>
+                    <option value="grandparent">Grandparent</option>
+                    <option value="other">Other</option>
+                </select>
+            </label>
+        </div>
+        <div>
+            <label>Smoker?
+                <input type="checkbox" name="smoker">
+            </label>
+        </div>
+        <div>
+            <button class="add">add</button>
+        </div>
+        <div>
+            <button type="submit">submit</button>
+        </div>
+    </form>
+</div>
+<pre class="debug"></pre>
+<script>
+    (function () {
 
 //cached DOM elements and custom methods-->>
-                var DOM = {
-                    body: document.querySelector('body'),
-                };
+        var DOM = {
+            body: document.querySelector('body'),
+        };
 
-                //Helper methods
-                DOM.addClass = function (className) {
-                    var changeClass = this.getAttribute('class');
-                    if(!changeClass){
-                        this.setAttribute('class', className);
-                    }else {
-                        var rgx = new RegExp('' + className + '', 'gi');
-                        if(changeClass.search(rgx)===-1){
-                            changeClass += " " + className;
-                            this.setAttribute('class', changeClass.trim());
-                        }
-                    }
-                };
+        //Helper methods
+        DOM.addClass = function (className) {
+            var changeClass = this.getAttribute('class');
+            if (!changeClass) {
+                this.setAttribute('class', className);
+            } else {
+                var rgx = new RegExp('' + className + '', 'gi');
+                if (changeClass.search(rgx) === -1) {
+                    changeClass += " " + className;
+                    this.setAttribute('class', changeClass.trim());
+                }
+            }
+        };
 
-                DOM.removeClass = function (className) {
-                    var changeClass = this.getAttribute('class');
-                    var rgx = new RegExp('' + className + '', 'gi');
-                    this.setAttribute('class', changeClass.replace(rgx, '').trim());
+        DOM.removeClass = function (className) {
+            var changeClass = this.getAttribute('class');
+            var rgx = new RegExp('' + className + '', 'gi');
+            this.setAttribute('class', changeClass.replace(rgx, '').trim());
 
-                    //check if class is empty
-                    if(!this.getAttribute('class')){
-                        this.removeAttribute('class');
-                    }
-                };
+            //check if class is empty
+            if (!this.getAttribute('class')) {
+                this.removeAttribute('class');
+            }
+        };
 //<<--Initial DOM ends here.
 
 //All things DOM.form-->>
-                DOM.form = {
-                    el: DOM.body.querySelector('form'),
-                    formEls: DOM.body.querySelector('form').elements
-                };
+        DOM.form = {
+            el: DOM.body.querySelector('form'),
+            formEls: DOM.body.querySelector('form').elements
+        };
 
-                DOM.form.age = {
-                    el: DOM.form.el.querySelector('input[name="age"]'),
-                    error: null,
-                    message: "Invalid Age",
-                    content: null
-                };
-                DOM.form.rel = {
-                    el: DOM.form.el.querySelector('select[name="rel"]'),
-                    error: null,
-                    message: 'Relationship is Required',
-                    content: null
-                };
-                DOM.form.smoker = {
-                    el: DOM.form.el.querySelector('input[name="smoker"]'),
-                    content: null,
-                    currentAge: function () {
-                        var curAge = DOM.form.age.content;
-                        if(curAge >= 18){
-                            this.el.removeAttribute('disabled');
-                        }else {
-                            this.el.checked = false;
-                        }
+        DOM.form.age = {
+            el: DOM.form.el.querySelector('input[name="age"]'),
+            error: null,
+            message: "Invalid Age",
+            content: null
+        };
+        DOM.form.rel = {
+            el: DOM.form.el.querySelector('select[name="rel"]'),
+            error: null,
+            message: 'Relationship is Required',
+            content: null
+        };
+        DOM.form.smoker = {
+            el: DOM.form.el.querySelector('input[name="smoker"]'),
+            content: null,
+            currentAge: function () {
+                var curAge = DOM.form.age.content;
+                if (curAge >= 18) {
+                    this.el.removeAttribute('disabled');
+                } else {
+                    this.el.checked = false;
+                }
 
-                      return curAge;
-                    },
-                    checkSmokerAge: function () {
-                        if(this.currentAge() < 18){
-                            this.el.setAttribute('disabled', '');
-                            alert("Must be 18 or over");
-                        }else {
-                           DOM.form.smoker.content =  this.el.checked;
-                        }
+                return curAge;
+            },
+            checkSmokerAge: function () {
+                if (this.currentAge() < 18) {
+                    this.el.setAttribute('disabled', '');
+                    alert("Must be 18 or over");
+                } else {
+                    DOM.form.smoker.content = this.el.checked;
+                }
+            }
+        };
+        DOM.form.buttons = {
+            group: document.getElementsByTagName('button'),
+            add: DOM.form.el.querySelector('button.add'),
+            submit: DOM.form.el.querySelector('button[type="submit"]'),
+            disableButtons: function () {
+                for (var i = 0; i < this.group.length; i++) {
+                    this.group.item(i).disabled = true;
+                }
+            },
+            enableButtons: function () {
+                if (!DOM.form.age.error && !DOM.form.rel.error) {
+                    for (var i = 0; i < this.group.length; i++) {
+                        this.group.item(i).disabled = false;
                     }
-                };
-                DOM.form.buttons = {
-                    group: document.getElementsByTagName('button'),
-                    add: DOM.form.el.querySelector('button.add'),
-                    submit: DOM.form.el.querySelector('button[type="submit"]'),
-                    disableButtons: function () {
-                        for (var i = 0; i < this.group.length; i++) {
-                            this.group.item(i).disabled = true;
-                        }
-                    },
-                    enableButtons: function () {
-                        if (!DOM.form.age.error && !DOM.form.rel.error) {
-                            for (var i = 0; i < this.group.length; i++) {
-                                this.group.item(i).disabled = false;
-                            }
-                        }
+                }
+            }
+        };
+
+        DOM.form.age.el.setAttribute('required', 'true');
+        DOM.form.rel.el.setAttribute('required', 'true');
+        DOM.form.setPristine = function setPristine() {
+            var touched = new RegExp(/touched/, 'gi');
+            var dirty = new RegExp(/dirty/, 'gi');
+            var formElms = this.formEls;
+            for (var i = 0; i < formElms.length; i++) {
+                if (formElms.item(i).getAttribute('class')) {
+                    if (formElms.item(i).getAttribute('class').search(touched) !== -1) {
+                        DOM.removeClass.call(formElms.item(i), 'touched');
                     }
-                };
-
-                DOM.form.age.el.setAttribute('required', 'true');
-                DOM.form.rel.el.setAttribute('required', 'true');
-                DOM.form.setPristine =  function setPristine() {
-                    var touched = new RegExp(/touched/,'gi');
-                    var dirty = new RegExp(/dirty/,'gi');
-                    var formElms = this.formEls;
-                    for(var i = 0; i < formElms.length; i++){
-                        if(formElms.item(i).getAttribute('class')){
-                            if(formElms.item(i).getAttribute('class').search(touched) !== -1){
-                                DOM.removeClass.call(formElms.item(i), 'touched');
-                            }
-                            if(formElms.item(i).getAttribute('class').search(dirty) !== -1){
-                                DOM.removeClass.call(formElms.item(i), 'dirty');
-                            }
-                        }
-
+                    if (formElms.item(i).getAttribute('class').search(dirty) !== -1) {
+                        DOM.removeClass.call(formElms.item(i), 'dirty');
                     }
-                };
+                }
 
-                DOM.form.touchEl = function(e) {
-                    DOM.addClass.call(e.currentTarget,'touched');
-                };
+            }
+        };
 
-                DOM.form.dirtyEl = function(e){
-                    DOM.addClass.call(e.currentTarget,'dirty');
-                };
+        DOM.form.touchEl = function (e) {
+            DOM.addClass.call(e.currentTarget, 'touched');
+        };
 
-                DOM.form.reset = function() {
-                    var els = this.formEls;
-                    var val;
-                    for(var i = 0; i<els.length; i++){
-                        if(val = els.item(i).value){
-                            if(val === 'on'){
-                                els.item(i).checked = false;
-                            }else{
-                                els.item(i).value = '';
-                            }
-                        }
+        DOM.form.dirtyEl = function (e) {
+            DOM.addClass.call(e.currentTarget, 'dirty');
+        };
+
+        DOM.form.reset = function () {
+            var els = this.formEls;
+            var val;
+            for (var i = 0; i < els.length; i++) {
+                if (val = els.item(i).value) {
+                    if (val === 'on') {
+                        els.item(i).checked = false;
+                    } else {
+                        els.item(i).value = '';
                     }
-                    this.setPristine();
-                };
+                }
+            }
+            this.setPristine();
+        };
 
-                DOM.form.requiredMembers = {
-                    getMembers: function() {
-                        var elements = [];
-                        var formEls = DOM.form.formEls;
-                        for(var i = 0; i<formEls.length; i++){
-                            if(formEls.item(i).required === true){
-                                elements.push(formEls.item(i));
-                            }
-                        }
-                        return elements;
-                    },
-                    isRequiredAndValid: function (){
-                        var elements = this.getMembers();
-                        var count = 0;
-                        for(var i = 0; i<elements.length; i++){
-                            if(/dirty/gi.test(elements[i].getAttribute('class'))){
-                                count++;
-                            }
-                        }
-                        return count === elements.length;
+        DOM.form.requiredMembers = {
+            getMembers: function () {
+                var elements = [];
+                var formEls = DOM.form.formEls;
+                for (var i = 0; i < formEls.length; i++) {
+                    if (formEls.item(i).required === true) {
+                        elements.push(formEls.item(i));
                     }
-                };
-
-                DOM.form.validation = {
-                    validate: function(e) {
-                        var targetElement = DOM.form[e.currentTarget['name']];
-                        if(DOM.form.validation.checkValueOf(e.target)){
-                            if (targetElement.error){
-                                targetElement.error.remove();
-                                targetElement.error = null;
-                            }
-                            targetElement.error = document.createElement('span');
-                            targetElement.error.innerHTML = targetElement.message;
-                            e.target.parentNode.appendChild(targetElement.error);
-                            DOM.addClass.call(e.target.parentElement, 'invalid');//
-                            DOM.form.buttons.disableButtons();
-                        }else {
-                            if (targetElement.error){
-                                targetElement.error.remove();
-                                targetElement.error = null;
-                                DOM.removeClass.call(e.target.parentElement, 'invalid');
-                                DOM.form.buttons.enableButtons();
-                            }
-                        }
-                    },
-                    checkValueOf: function(target) {
-                        if(target['name'] === 'age'){
-                            return target.value === '' || !this.isInt(target.value) || target.value < 1;
-                        }else{
-                            return target.value === '';
-                        }
-                    },
-                    isInt: function(val) {
-                        var rgx = new RegExp(/^\d+$/, 'g');
-                        return rgx.test(val);
-                    },
-                    triggerValidate: function() {
-                        var elements = DOM.form.requiredMembers.getMembers();
-                        elements.forEach(function (el) {
-                            el.focus();
-                            el.blur();
-                        });
-                    },
-                    enableOptions: function (opts, enable) {
-                        var options = DOM.form.rel.el;
-                        opts.forEach(function (opt) {
-                            for(var i = 0; i<options.length; i++){
-                                if(options.item(i).value === opt){
-                                    if(enable){
-                                        options.item(i).removeAttribute('disabled');
-                                    }else{
-                                        options.item(i).setAttribute('disabled',"");
-                                    }
-                                }
-                            }
-                        });
-
+                }
+                return elements;
+            },
+            isRequiredAndValid: function () {
+                var elements = this.getMembers();
+                var count = 0;
+                for (var i = 0; i < elements.length; i++) {
+                    if (/dirty/gi.test(elements[i].getAttribute('class'))) {
+                        count++;
                     }
-                };
-//<<----DOM.form ends here
-                var hr = document.createElement('hr');
-                DOM.body.appendChild(hr);
-                var container = document.createElement('div');
-                container.setAttribute('class', 'container');
-                DOM.body.appendChild(container);
-                DOM.render = function () {
-                    var div = document.createElement('div');
-                    div.setAttribute('data-member-id', '' + members.length + '');
-                    container.appendChild(div);
-                    div.style.border = '1px solid black';
-                    div.style.width = "15%";
-                    div.style.float = "left";
-                    div.style.marginRight = "1px";
-                    var header = document.createElement('header');
-                    header.style.backgroundColor = "#428bca";
-                    header.style.padding = "10px";
-                    header.innerHTML = "Member Info";
-                    div.appendChild(header);
-                    var headerDeleteButtonSpan = document.createElement('span');
-                    headerDeleteButtonSpan.style.height = '20px';
-                    headerDeleteButtonSpan.style.width = '20px';
-                    header.appendChild(headerDeleteButtonSpan);
-                    var deleteButton = document.createElement('button');
-                    deleteButton.innerHTML = '&timesb;';
-                    deleteButton.style.fontSize = "1.5em";
-                    deleteButton.style.padding = '0';
-                    deleteButton.style.lineHeight = '100%';
-                    deleteButton.style.display = 'inline-block';
-                    deleteButton.style.height = '25px';
-                    deleteButton.style.width = '25px';
-                    deleteButton.style.float = 'right';
-                    deleteButton.style.marginTop = "-5px";
-                    deleteButton.style.marginRight = "-5px";
-                    deleteButton.style.cursor = 'pointer';
-                    headerDeleteButtonSpan.appendChild(deleteButton);
-                    var section = document.createElement('section');
-                    section.style.paddingLeft = "20px";
-                    div.appendChild(section);
-                    var age = document.createElement('p');
-                    age.innerHTML = "Age: " + members[members.length-1].age + " years old";
-                    section.appendChild(age);
-                    var relationship = document.createElement('p');
-                    relationship.innerHTML = "Relationship: " + members[members.length-1].rel;
-                    section.appendChild(relationship);
-                    var smoker = document.createElement('p');
-                    smoker.innerHTML = "Smoker: " + members[members.length-1].smoker;
-                    section.appendChild(smoker);
-                    deleteButton.addEventListener('click', function (e) {
-                        var nodeList = Array.prototype.slice.call( document.getElementsByClassName('container')[0].children );
-                        var currentContainer = e.currentTarget.parentElement.parentElement.parentElement;
-                        var relationship = members[nodeList.indexOf(currentContainer)].rel;
-                        if(relationship === 'self' || relationship === 'spouse'){
-                            DOM.form.validation.enableOptions([relationship], true);
+                }
+                return count === elements.length;
+            }
+        };
+
+        DOM.form.validation = {
+            validate: function (e) {
+                var targetElement = DOM.form[e.currentTarget['name']];
+                if (DOM.form.validation.checkValueOf(e.target)) {
+                    if (targetElement.error) {
+                        targetElement.error.remove();
+                        targetElement.error = null;
+                    }
+                    targetElement.error = document.createElement('span');
+                    targetElement.error.innerHTML = targetElement.message;
+                    e.target.parentNode.appendChild(targetElement.error);
+                    DOM.addClass.call(e.target.parentElement, 'invalid');//
+                    DOM.form.buttons.disableButtons();
+                } else {
+                    if (targetElement.error) {
+                        targetElement.error.remove();
+                        targetElement.error = null;
+                        DOM.removeClass.call(e.target.parentElement, 'invalid');
+                        DOM.form.buttons.enableButtons();
+                    }
+                }
+            },
+            checkValueOf: function (target) {
+                if (target['name'] === 'age') {
+                    return target.value === '' || !this.isInt(target.value) || target.value < 1;
+                } else {
+                    return target.value === '';
+                }
+            },
+            isInt: function (val) {
+                var rgx = new RegExp(/^\d+$/, 'g');
+                return rgx.test(val);
+            },
+            triggerValidate: function () {
+                var elements = DOM.form.requiredMembers.getMembers();
+                elements.forEach(function (el) {
+                    el.focus();
+                    el.blur();
+                });
+            },
+            underAgeRelationships: function () {
+                var uaRels = ['grandparent', 'parent', 'self', 'spouse'];
+                var rgx = new RegExp(/self|spouse/,'g');
+                var relArray = [];
+
+                members.forEach(function (member) {
+                    relArray.push(member.rel);
+                });
+
+                if(relArray.length > 0){
+                    var relString = relArray.join('');
+                    var existingRels = relString.match(rgx);
+                    existingRels.forEach(function (rel) {
+                        if(uaRels.indexOf(rel) !== -1){
+                            uaRels.splice(uaRels.indexOf(rel), 1);
                         }
-                        members.splice(nodeList.indexOf(currentContainer),1);
-                        currentContainer.remove();
-                        console.log(members);
                     });
-                };
+                }
+
+                if (DOM.form.age.el.value < 18) {
+                    DOM.form.validation.enableOptions(uaRels, false);
+                } else {
+                    DOM.form.validation.enableOptions(uaRels, true);
+                }
+            },
+            enableOptions: function (opts, enable) {
+                var options = DOM.form.rel.el;
+                opts.forEach(function (opt) {
+                    for (var i = 0; i < options.length; i++) {
+                        if (options.item(i).value === opt) {
+                            if (enable) {
+                                options.item(i).removeAttribute('disabled');
+                            } else {
+                                options.item(i).setAttribute('disabled', "");
+                            }
+                        }
+                    }
+                });
+
+            }
+        };
+//<<----DOM.form ends here
 
 //Member Class -->>
-                var members = [];
-                
-                function Member(age, rel, smoker) {
-                    this.age = age;
-                    this.rel = rel;
-                    this.smoker = smoker;
-                }
+        var members = [];
+
+        function Member(age, rel, smoker) {
+            this.age = age;
+            this.rel = rel;
+            this.smoker = smoker;
+        }
+
 //<<-- Member Class ends here.
 
 //Helpers -->>
-                function create(age, rel, smoker) {
-                    var member = new Member(age, rel, smoker);
-                    members.push(member);
-                }
-
-                function read() {
-
-                }
-
-                function update() {
-
-                }
-
-                function dlete() {
-
-                }
+        function create(age, rel, smoker) {
+            var member = new Member(age, rel, smoker);
+            members.push(member);
+        }
 
 //<<--Helpers end here.
-                
+
 //Events-->>
-                //textbox: age
-                DOM.form.age.el.addEventListener('blur', DOM.form.validation.validate, false);
-                DOM.form.age.el.addEventListener('focus', DOM.form.touchEl, false);
-                DOM.form.age.el.addEventListener('keyup', function(e) {
-                    //no leading zeroes
-                    DOM.form.age.el.value = DOM.form.age.el.value.replace(/^0(?=\d*)/g, '');
-                    DOM.form.dirtyEl(e);
-                    DOM.form.validation.validate(e);
-                    DOM.form.age.content = e.currentTarget.value;
-                    DOM.form.smoker.currentAge();
-                    if(DOM.form.age.el.value < 18){
-                        DOM.form.validation.enableOptions(['parent', 'grandparent','spouse','self'], false);
-                    }else{
-                        DOM.form.validation.enableOptions(['parent', 'grandparent','spouse','self'], true);
-                    }
-                }, false);
+//Age---------------->
+        DOM.form.age.el.addEventListener('blur', DOM.form.validation.validate, false);
+        DOM.form.age.el.addEventListener('focus', DOM.form.touchEl, false);
+        DOM.form.age.el.addEventListener('keyup', function (e) {
+            //no leading zeroes
+            DOM.form.age.el.value = DOM.form.age.el.value.replace(/^0(?=\d*)/g, '');
+            DOM.form.dirtyEl(e);
+            DOM.form.validation.validate(e);
+            DOM.form.age.content = e.currentTarget.value;
+            DOM.form.smoker.currentAge();
+            DOM.form.validation.underAgeRelationships();
+        }, false);
+//<<------Age Ends Here.
 
-                //dropdown: relationship
-                DOM.form.rel.el.addEventListener('change', function(e){
-                    DOM.form.validation.validate(e);
-                    DOM.form.dirtyEl(e);
-                    DOM.form.rel.content = e.currentTarget.value;
-                },false);
-                DOM.form.rel.el.addEventListener('focus', DOM.form.touchEl, false);
-                DOM.form.rel.el.addEventListener('blur',DOM.form.validation.validate,false);
-                DOM.form.buttons.add.onclick = function(e){
-                    e.preventDefault();
-                    if(!DOM.form.requiredMembers.isRequiredAndValid()){
-                        DOM.form.validation.triggerValidate();
-                    }else {
-                        create(DOM.form.age.content,DOM.form.rel.content,DOM.form.smoker.el.checked);
-                        console.log(members);
-                        switch (DOM.form.rel.content){
-                            case 'self':
-                                DOM.form.validation.enableOptions([DOM.form.rel.content], false);
-                                break;
-                            case 'spouse':
-                                DOM.form.validation.enableOptions([DOM.form.rel.content], false);
-                                break;
-                        }
+//Relationship-------->>
+        //dropdown: relationship
+        DOM.form.rel.el.addEventListener('change', function (e) {
+            DOM.form.validation.validate(e);
+            DOM.form.dirtyEl(e);
+            DOM.form.rel.content = e.currentTarget.value;
+        }, false);
+        DOM.form.rel.el.addEventListener('focus', DOM.form.touchEl, false);
+        DOM.form.rel.el.addEventListener('blur', DOM.form.validation.validate, false);
+//<<--Relationship Ends Here.
 
-                        DOM.form.reset();
-                        DOM.render();
-                    }
-                };
+//Smoker------------------>>
+        DOM.form.smoker.el.addEventListener('click', function (e) {
+            DOM.form.smoker.checkSmokerAge();
+            DOM.form.smoker.content = DOM.form.smoker.el.checked;
+        });
+//<<-----Smoker Ends Here
 
-                DOM.form.buttons.submit.onclick = function (e) {
-                    e.preventDefault();
-                    DOM.form.setPristine();
-                };
+//Add------------------>>
+        DOM.form.buttons.add.onclick = function (e) {
+            e.preventDefault();
+            if (!DOM.form.requiredMembers.isRequiredAndValid()) {
+                DOM.form.validation.triggerValidate();
+            } else {
+                create(DOM.form.age.content, DOM.form.rel.content, DOM.form.smoker.el.checked);
+                console.log(members);
+                switch (DOM.form.rel.content) {
+                    case 'self':
+                        DOM.form.validation.enableOptions([DOM.form.rel.content], false);
+                        break;
+                    case 'spouse':
+                        DOM.form.validation.enableOptions([DOM.form.rel.content], false);
+                        break;
+                }
 
-                DOM.form.smoker.el.addEventListener('click', function (e) {
-                    DOM.form.smoker.checkSmokerAge();
-                    DOM.form.smoker.content = DOM.form.smoker.el.checked;
-                });
-//-->> Events end here.
+                DOM.form.reset();
+                DOM.renderNewMember();
+            }
+        };
 
-                
-            })();
-        </script>
-    </body>
+        //New Member Container
+        var hr = document.createElement('hr');
+        var container = document.createElement('div');
+        DOM.body.appendChild(hr);
+        DOM.body.appendChild(container);
+        container.setAttribute('class', 'container');
+
+        //Render-------------------->>
+        DOM.renderNewMember = function () {
+            //New Member HTML--->>>
+            var div = document.createElement('div');
+            var header = document.createElement('header');
+            var headerSpan = document.createElement('span');
+            var deleteButton = document.createElement('button');
+            var section = document.createElement('section');
+            var age = document.createElement('p');
+            var relationship = document.createElement('p');
+            var smoker = document.createElement('p');
+
+            container.appendChild(div);
+            div.appendChild(header);
+            header.innerHTML = "Member Info";
+            header.appendChild(headerSpan);
+            headerSpan.appendChild(deleteButton);
+            div.appendChild(section);
+            section.appendChild(age);
+            section.appendChild(relationship);
+            section.appendChild(smoker);
+
+            age.innerHTML = "Age: " + members[members.length - 1].age + " years old";
+            relationship.innerHTML = "Relationship: " + members[members.length - 1].rel;
+            smoker.innerHTML = "Smoker: " + members[members.length - 1].smoker;
+            deleteButton.innerHTML = '&timesb;';
+            //<<---New Member HTML ends here.
+
+            //New Member CSS--->>
+            div.style.border = '1px solid black';
+            div.style.width = "15%";
+            div.style.float = "left";
+            div.style.marginRight = "1px";
+            header.style.backgroundColor = "#428bca";
+            header.style.padding = "10px";
+            headerSpan.style.height = '20px';
+            headerSpan.style.width = '20px';
+            deleteButton.style.fontSize = "1.5em";
+            deleteButton.style.padding = '0';
+            deleteButton.style.lineHeight = '100%';
+            deleteButton.style.display = 'inline-block';
+            deleteButton.style.height = '25px';
+            deleteButton.style.width = '25px';
+            deleteButton.style.float = 'right';
+            deleteButton.style.marginTop = "-5px";
+            deleteButton.style.marginRight = "-5px";
+            deleteButton.style.cursor = 'pointer';
+            section.style.paddingLeft = "20px";
+            //<<--New Member CSS Ends Here.
+
+            //New Member Delete Button--->>
+            deleteButton.addEventListener('click', function (e) {
+                var nodeList = Array.prototype.slice.call(document.getElementsByClassName('container')[0].children);
+                var currentContainer = e.currentTarget.parentElement.parentElement.parentElement;
+                var relationship = members[nodeList.indexOf(currentContainer)].rel;
+                if (relationship === 'self' || relationship === 'spouse') {
+                    DOM.form.validation.enableOptions([relationship], true);
+                }
+                members.splice(nodeList.indexOf(currentContainer), 1);
+                currentContainer.remove();
+                console.log(members);
+            });
+            //<<--New Member Delete Button Ends Here.
+        };
+        //<<------Render Ends Here.
+//<<---------Add Ends Here.
+
+//Submit---------------->>
+        DOM.form.buttons.submit.onclick = function (e) {
+            e.preventDefault();
+            document.getElementsByClassName('debug')[0].innerHTML = JSON.stringify(members);
+            DOM.form.setPristine();
+        };
+//<<-------Submit Ends Here.
+
+//<<--- Events end here.
+
+
+    })();
+</script>
+</body>
 </html>
