@@ -22,7 +22,7 @@ API Documentation
 - DOM.form.validation.checkValueOf: Checks form input for a valid value (e.g. Age not a string, etc..).
 - DOM.form.validation.isInt: Because isNaN doesn't cover all cases when checking for valid integer values.
 - DOM.form.validation.triggerValidate: Triggers validation process on add.
-- DOM.form.validation.triggerValidate.underAgeRelationships: Ensures appropriate relationships when 
+- DOM.form.validation.underAgeRelationships: Ensures appropriate relationships when 
   relationship options are selected (e.g. No 13 y/o spouses, 5 y/o granparents, etc...).
 - DOM.form.validation.enableOptions: Works as an enable/disable options method for the options dropdown. 
   Takes and array and a boolean. enableOptions(arr[,false]) is equivalent to disableOptions.
