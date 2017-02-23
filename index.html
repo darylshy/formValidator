@@ -277,11 +277,13 @@
                 if(relArray.length > 0){
                     var relString = relArray.join('');
                     var existingRels = relString.match(rgx);
-                    existingRels.forEach(function (rel) {
-                        if(uaRels.indexOf(rel) !== -1){
-                            uaRels.splice(uaRels.indexOf(rel), 1);
-                        }
-                    });
+                    if(existingRels !== null){
+                        existingRels.forEach(function (rel) {
+                            if(uaRels.indexOf(rel) !== -1){
+                                uaRels.splice(uaRels.indexOf(rel), 1);
+                            }
+                        });
+                    }
                 }
 
                 if (DOM.form.age.el.value < 18) {
@@ -334,10 +336,15 @@
         DOM.form.age.el.addEventListener('keyup', function (e) {
             //no leading zeroes
             DOM.form.age.el.value = DOM.form.age.el.value.replace(/^0(?=\d*)/g, '');
+            //CSS dirty class
             DOM.form.dirtyEl(e);
+            //general form validation
             DOM.form.validation.validate(e);
+            //prevents underage smoker option
             DOM.form.age.content = e.currentTarget.value;
+            //gets current age
             DOM.form.smoker.currentAge();
+            //prevents underage relationship options
             DOM.form.validation.underAgeRelationships();
         }, false);
 //<<------Age Ends Here.
@@ -367,7 +374,6 @@
                 DOM.form.validation.triggerValidate();
             } else {
                 create(DOM.form.age.content, DOM.form.rel.content, DOM.form.smoker.el.checked);
-                console.log(members);
                 switch (DOM.form.rel.content) {
                     case 'self':
                         DOM.form.validation.enableOptions([DOM.form.rel.content], false);
@@ -465,7 +471,7 @@
 //<<-------Submit Ends Here.
 
 //<<--- Events end here.
-
+console.log(DOM);
 
     })();
 </script>
