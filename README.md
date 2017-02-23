@@ -29,10 +29,10 @@ API Documentation
 - create: Instantiates a new member object from the Member class.
 - renderNewMember: Renders new Member card to the view.
 
-This program uses: 
---Uses npm
---Uses lite-server
+This program uses:   
+-- Uses npm  
+-- Uses lite-server  
 
-To run this program (make sure you're inside of teh hhbuilder folder:
---npm install
---npm start
+To run this program (make sure you're inside of teh hhbuilder folder:  
+- npm install  
+- npm start  
