@@ -33,6 +33,6 @@ This program uses:
 - npm  
 - lite-server  
 
-To run this program (make sure you're inside of teh hhbuilder folder:  
+To run this program:  
 - npm install  
 - npm start  
