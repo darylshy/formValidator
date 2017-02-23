@@ -30,8 +30,8 @@ API Documentation
 - renderNewMember: Renders new Member card to the view.
 
 This program uses:   
--- Uses npm  
--- Uses lite-server  
+- npm  
+- lite-server  
 
 To run this program (make sure you're inside of teh hhbuilder folder:  
 - npm install  
