@@ -177,6 +177,7 @@
                 }
 
             }
+            this.reset();
         };
 
         DOM.form.touchEl = function (e) {
@@ -199,7 +200,6 @@
                     }
                 }
             }
-            this.setPristine();
         };
 
         DOM.form.requiredMembers = {
@@ -305,7 +305,6 @@
                         }
                     }
                 });
-
             }
         };
 //<<----DOM.form ends here
@@ -383,7 +382,7 @@
                         break;
                 }
 
-                DOM.form.reset();
+                DOM.form.setPristine();
                 DOM.renderNewMember();
             }
         };
@@ -455,7 +454,6 @@
                 }
                 members.splice(nodeList.indexOf(currentContainer), 1);
                 currentContainer.remove();
-                console.log(members);
             });
             //<<--New Member Delete Button Ends Here.
         };
